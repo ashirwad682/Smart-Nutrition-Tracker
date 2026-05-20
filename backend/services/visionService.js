@@ -1,15 +1,13 @@
 import fs from 'fs';
-import fetch from 'node-fetch';
-import FormData from 'form-data';
 
-// Vision service: If GEMINI_API_KEY and GEMINI_API_URL are set, call the
-// provided endpoint with the image. Otherwise fall back to a lightweight
-// heuristic based on file size. The expected AI response is JSON with keys
-// { foodName, calories, protein, fats, carbs, confidence } — if not present,
-// heuristic values are used.
+const DEFAULT_GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
+
+// Vision service: call Gemini generateContent with the uploaded meal image.
+// If Gemini is not configured or returns an unexpected response, fall back
+// to a lightweight heuristic so the app still works locally.
 export const analyzeFoodImage = async (filePath) => {
   const apiKey = process.env.GEMINI_API_KEY;
-  const apiUrl = process.env.GEMINI_API_URL; // e.g. https://api.example.com/v1/analyze
+  const apiUrl = process.env.GEMINI_API_URL || DEFAULT_GEMINI_API_URL;
 
   // Helper heuristic when no AI provider or when provider fails
   const heuristic = () => {
@@ -39,15 +37,40 @@ export const analyzeFoodImage = async (filePath) => {
   }
 
   try {
-    const form = new FormData();
-    form.append('file', fs.createReadStream(filePath));
+    const mimeType = 'image/jpeg';
+    const imageBase64 = fs.readFileSync(filePath).toString('base64');
+    const prompt = [
+      'Analyze this meal photo and return ONLY valid JSON with these keys:',
+      '{"foodName":"string","calories":number,"protein":number,"fats":number,"carbs":number,"confidence":number}',
+      'Estimate values for the single visible meal. Use integers for calories/protein/fats/carbs.',
+      'Do not include markdown, code fences, or any extra text.'
+    ].join(' ');
 
     const resp = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`
+        'Content-Type': 'application/json',
+        'X-goog-api-key': apiKey
       },
-      body: form
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: prompt },
+              {
+                inlineData: {
+                  mimeType,
+                  data: imageBase64
+                }
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 512
+        }
+      })
     });
 
     if (!resp.ok) {
@@ -57,21 +80,28 @@ export const analyzeFoodImage = async (filePath) => {
     }
 
     const data = await resp.json().catch(() => null);
-    if (!data) return heuristic();
+    const text = data?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '';
 
-    // Prefer structured fields if present
-    const { foodName, calories, protein, fats, carbs, confidence } = data;
-    if ([calories, protein, fats, carbs].some((v) => v === undefined)) {
+    const cleaned = text.trim().replace(/^```json\s*/i, '').replace(/\s*```$/i, '');
+    const parsed = cleaned ? JSON.parse(cleaned) : null;
+    if (!parsed) return heuristic();
+
+    const calories = Number(parsed.calories);
+    const protein = Number(parsed.protein);
+    const fats = Number(parsed.fats);
+    const carbs = Number(parsed.carbs);
+
+    if ([calories, protein, fats, carbs].some((value) => Number.isNaN(value))) {
       return heuristic();
     }
 
     return {
-      foodName: foodName || 'Food (image)',
-      calories: Number(calories) || 0,
-      protein: Number(protein) || 0,
-      fats: Number(fats) || 0,
-      carbs: Number(carbs) || 0,
-      confidence: Number(confidence) || 0
+      foodName: parsed.foodName || 'Food (image)',
+      calories,
+      protein,
+      fats,
+      carbs,
+      confidence: Number(parsed.confidence) || 0
     };
   } catch (err) {
     console.error('Vision service failed', err);
