@@ -44,19 +44,47 @@ export const searchFoods = async (query) => {
   if (!process.env.FOODDATA_CENTRAL_API_KEY) {
     throw new Error('FOODDATA_CENTRAL_API_KEY is not set');
   }
+  try {
+    const url = new URL(`${USDA_API_ROOT}/foods/search`);
+    url.searchParams.set('api_key', process.env.FOODDATA_CENTRAL_API_KEY);
+    url.searchParams.set('query', query);
+    url.searchParams.set('pageSize', '10');
 
-  const url = new URL(`${USDA_API_ROOT}/foods/search`);
-  url.searchParams.set('api_key', process.env.FOODDATA_CENTRAL_API_KEY);
-  url.searchParams.set('query', query);
-  url.searchParams.set('pageSize', '10');
+    const response = await fetch(url);
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      console.error('USDA search error', response.status, body);
+      throw new Error('USDA food search failed');
+    }
 
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('USDA food search failed');
+    const data = await response.json();
+    return (data.foods || []).map(normalizeUsdaFood);
+  } catch (usdaError) {
+    // Fallback to Open Food Facts search if USDA fails
+    try {
+      console.warn('Falling back to OpenFoodFacts search for query:', query);
+      const offUrl = new URL(`${OFF_API_ROOT}/cgi/search.pl`);
+      offUrl.searchParams.set('search_terms', query);
+      offUrl.searchParams.set('search_simple', '1');
+      offUrl.searchParams.set('action', 'process');
+      offUrl.searchParams.set('json', '1');
+      offUrl.searchParams.set('page_size', '10');
+
+      const offResp = await fetch(offUrl);
+      if (!offResp.ok) {
+        const body = await offResp.text().catch(() => '');
+        console.error('OpenFoodFacts search failed', offResp.status, body);
+        throw new Error('Food search failed');
+      }
+
+      const offData = await offResp.json();
+      const products = offData.products || [];
+      return products.map((p) => normalizeOffProduct(p, p.code || ''));
+    } catch (offError) {
+      console.error('Both USDA and OpenFoodFacts searches failed', usdaError, offError);
+      throw new Error('Food search failed');
+    }
   }
-
-  const data = await response.json();
-  return (data.foods || []).map(normalizeUsdaFood);
 };
 
 export const lookupBarcode = async (barcode) => {

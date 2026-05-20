@@ -30,35 +30,6 @@ const FoodSearchPage = () => {
     navigate('/add-meal', { state: { food } });
   };
 
-  const [savingMap, setSavingMap] = useState({});
-
-  const saveFoodToDB = async (food, idx) => {
-    const key = `${food.foodName}-${idx}`;
-    setSavingMap((m) => ({ ...m, [key]: 'saving' }));
-
-    try {
-      await api.createMeal({
-        foodName: food.foodName,
-        barcode: food.barcode || '',
-        quantity: 1,
-        calories: Number(food.calories) || 0,
-        protein: Number(food.protein) || 0,
-        fats: Number(food.fats) || 0,
-        carbs: Number(food.carbs) || 0,
-        mealType: 'snack',
-        servingUnit: food.servingUnit || 'g',
-        servingSize: food.servingSize || 100,
-        source: 'search'
-      });
-
-      setSavingMap((m) => ({ ...m, [key]: 'saved' }));
-      setTimeout(() => setSavingMap((m) => { const copy = { ...m }; delete copy[key]; return copy; }), 1800);
-    } catch (err) {
-      setSavingMap((m) => ({ ...m, [key]: 'error' }));
-      setTimeout(() => setSavingMap((m) => { const copy = { ...m }; delete copy[key]; return copy; }), 2800);
-    }
-  };
-
   return (
     <div className="page-stack">
       <section className="panel">
@@ -83,7 +54,7 @@ const FoodSearchPage = () => {
             <p className="empty-state">Search a food to see nutrition results.</p>
           ) : (
             results.map((food, index) => (
-              <article className="food-card fade-in" key={`${food.foodName}-${index}`}>
+              <article className="food-card" key={`${food.foodName}-${index}`}>
                 <div>
                   <h3>{food.foodName}</h3>
                   <p>{food.servingSize} {food.servingUnit} serving</p>
@@ -94,19 +65,9 @@ const FoodSearchPage = () => {
                   <span>{food.fats}g fat</span>
                   <span>{food.carbs}g carbs</span>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="button button-secondary" type="button" onClick={() => openMeal(food)}>
-                    Add meal
-                  </button>
-                  <button
-                    className="button button-primary"
-                    type="button"
-                    onClick={() => saveFoodToDB(food, index)}
-                    disabled={Boolean(savingMap[`${food.foodName}-${index}`])}
-                  >
-                    {savingMap[`${food.foodName}-${index}`] === 'saving' ? 'Saving...' : savingMap[`${food.foodName}-${index}`] === 'saved' ? 'Saved' : 'Save'}
-                  </button>
-                </div>
+                <button className="button button-secondary" type="button" onClick={() => openMeal(food)}>
+                  Add meal
+                </button>
               </article>
             ))
           )}
