@@ -1,6 +1,8 @@
 import Meal from '../models/Meal.js';
 import { analyzeFoodImage } from '../services/visionService.js';
 import path from 'path';
+import fs from 'fs/promises';
+import crypto from 'crypto';
 
 const dayRange = () => {
   const start = new Date();
@@ -40,7 +42,7 @@ export const createMeal = async (req, res) => {
       protein,
       fats,
       carbs,
-      imagePath = '',
+      imagePath: incomingImagePath = '',
       mealType = 'snack',
       servingUnit = 'g',
       servingSize = 100,
@@ -52,6 +54,30 @@ export const createMeal = async (req, res) => {
       return res.status(400).json({ message: 'Food name, quantity, and nutrition values are required' });
     }
 
+    // If the client provided an external image URL, download and store locally
+    let finalImagePath = incomingImagePath || '';
+    try {
+      if (finalImagePath && (finalImagePath.startsWith('http://') || finalImagePath.startsWith('https://'))) {
+        const res = await fetch(finalImagePath);
+        if (res.ok) {
+          const uploadsDir = path.resolve('uploads');
+          await fs.mkdir(uploadsDir, { recursive: true });
+
+          const urlObj = new URL(finalImagePath);
+          const ext = path.extname(urlObj.pathname) || '.jpg';
+          const fileName = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`;
+          const filePath = path.join(uploadsDir, fileName);
+          const buffer = Buffer.from(await res.arrayBuffer());
+          await fs.writeFile(filePath, buffer);
+          finalImagePath = `/uploads/${fileName}`;
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to download external image, keeping original path', err && err.message);
+      // leave finalImagePath as the original incoming URL if download failed
+      finalImagePath = incomingImagePath || '';
+    }
+
     const meal = await Meal.create({
       userId: req.userId,
       foodName,
@@ -61,7 +87,7 @@ export const createMeal = async (req, res) => {
       protein,
       fats,
       carbs,
-      imagePath,
+      imagePath: finalImagePath,
       mealType,
       servingUnit,
       servingSize,
