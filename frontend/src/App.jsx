@@ -9,6 +9,7 @@ import HistoryPage from './pages/MealHistoryPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
+import PhotoMealPage from './pages/PhotoMealPage';
 
 const App = () => (
   <Routes>
@@ -26,6 +27,7 @@ const App = () => (
       <Route path="search" element={<FoodSearchPage />} />
       <Route path="scanner" element={<BarcodeScannerPage />} />
       <Route path="add-meal" element={<AddMealPage />} />
+      <Route path="add-meal/photo" element={<PhotoMealPage />} />
       <Route path="history" element={<HistoryPage />} />
       <Route path="profile" element={<ProfilePage />} />
     </Route>

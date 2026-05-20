@@ -34,6 +34,26 @@ export const api = {
   searchFood: (query) => request(`/api/food/search?query=${encodeURIComponent(query)}`),
   lookupBarcode: (barcode) => request(`/api/food/barcode/${encodeURIComponent(barcode)}`),
   createMeal: (payload) => request('/api/meals', { method: 'POST', body: JSON.stringify(payload) }),
+  analyzeMealPhoto: async (file) => {
+    const token = readToken();
+    const form = new FormData();
+    form.append('photo', file);
+
+    const res = await fetch(`${API_URL}/api/meals/analyze`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: form
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || 'Photo analysis failed');
+    }
+
+    return res.json();
+  },
   getTodayMeals: () => request('/api/meals/today'),
   getMealHistory: () => request('/api/meals/history'),
   deleteMeal: (id) => request(`/api/meals/${id}`, { method: 'DELETE' })

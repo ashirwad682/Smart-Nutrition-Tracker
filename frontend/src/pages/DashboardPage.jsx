@@ -35,6 +35,7 @@ const DashboardPage = () => {
         <div className="hero-actions">
           <Link className="button button-primary" to="/scanner">Scan barcode</Link>
           <Link className="button button-secondary" to="/search">Search food</Link>
+          <Link className="button button-secondary" to="/add-meal/photo">Upload photo</Link>
         </div>
       </section>
 

@@ -1,4 +1,5 @@
 import Meal from '../models/Meal.js';
+import { analyzeFoodImage } from '../services/visionService.js';
 
 const dayRange = () => {
   const start = new Date();
@@ -113,5 +114,21 @@ export const deleteMeal = async (req, res) => {
     return res.json({ message: 'Meal deleted successfully' });
   } catch (error) {
     return res.status(500).json({ message: 'Failed to delete meal' });
+  }
+};
+
+export const analyzeMealImage = async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) return res.status(400).json({ message: 'Photo is required' });
+
+    // analyze the uploaded image (returns calories/protein/fats/carbs)
+    const analysis = await analyzeFoodImage(file.path);
+
+    // don't save automatically — return analysis for confirmation
+    return res.json({ analysis, file: { path: file.path, originalname: file.originalname } });
+  } catch (error) {
+    console.error('Image analysis failed', error);
+    return res.status(500).json({ message: 'Image analysis failed' });
   }
 };
