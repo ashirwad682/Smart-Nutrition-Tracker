@@ -12,6 +12,31 @@ const nutrientValueFromList = (nutrients, ids) => {
   return 0;
 };
 
+const chooseUsdaImage = (food) => {
+  // USDA responses vary; try known fields and nested arrays
+  if (!food) return '';
+  // common photo object
+  if (food.photo) {
+    if (food.photo.thumb) return food.photo.thumb;
+    if (food.photo.small) return food.photo.small;
+    if (typeof food.photo === 'string') return food.photo;
+  }
+
+  // some responses include 'images' array
+  if (Array.isArray(food.images) && food.images.length > 0) {
+    const img = food.images[0];
+    if (img.small) return img.small;
+    if (img.thumb) return img.thumb;
+    if (img.src) return img.src;
+  }
+
+  // older responses or different shapes
+  if (food.image) return food.image;
+  if (food.thumbnail) return food.thumbnail;
+
+  return '';
+};
+
 const normalizeUsdaFood = (food) => ({
   foodName: food.description || 'Unknown food',
   barcode: '',
@@ -22,10 +47,32 @@ const normalizeUsdaFood = (food) => ({
   protein: Math.round(nutrientValueFromList(food.foodNutrients, [1003, 203])),
   fats: Math.round(nutrientValueFromList(food.foodNutrients, [1004, 204])),
   carbs: Math.round(nutrientValueFromList(food.foodNutrients, [1005, 205])),
-  image: (food.photo && (food.photo.thumb || food.photo.small || food.photo)) || '',
+  image: chooseUsdaImage(food) || '',
   source: 'usda',
   raw: food
 });
+
+const chooseOffImage = (product) => {
+  if (!product) return '';
+  // common direct urls
+  if (product.image_front_small_url) return product.image_front_small_url;
+  if (product.image_front_thumb_url) return product.image_front_thumb_url;
+  if (product.image_small_url) return product.image_small_url;
+  if (product.image_thumb_url) return product.image_thumb_url;
+  if (product.image_url) return product.image_url;
+
+  // new OpenFoodFacts shapes
+  if (product.selected_images && product.selected_images.front) {
+    const front = product.selected_images.front;
+    if (front.small && front.small.display) return front.small.display;
+    if (front.thumb && front.thumb.display) return front.thumb.display;
+  }
+
+  // some products include nested sizes or 'images'
+  if (product.images && product.images.front && product.images.front.small) return product.images.front.small;
+
+  return '';
+};
 
 const normalizeOffProduct = (product, barcode) => ({
   foodName: product.product_name || product.generic_name || 'Unknown product',
@@ -38,7 +85,7 @@ const normalizeOffProduct = (product, barcode) => ({
   fats: Math.round(Number(product.nutriments?.fat_100g || 0)),
   carbs: Math.round(Number(product.nutriments?.carbohydrates_100g || 0)),
   // prefer small/thumbnail images when available
-  image: product.image_small_url || product.image_thumb_url || product.image_url || '',
+  image: chooseOffImage(product) || '',
   source: 'openfoodfacts',
   raw: product
 });
