@@ -6,6 +6,7 @@ const PhotoMealPage = () => {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [analysis, setAnalysis] = useState(null);
+  const [imagePath, setImagePath] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const PhotoMealPage = () => {
     setFile(f);
     setPreview(URL.createObjectURL(f));
     setAnalysis(null);
+    setImagePath('');
     setError('');
   };
 
@@ -26,6 +28,7 @@ const PhotoMealPage = () => {
     try {
       const res = await api.analyzeMealPhoto(file);
       setAnalysis(res.analysis);
+      setImagePath(res.file?.imagePath || '');
     } catch (err) {
       setError(err.message || 'Analysis failed');
     } finally {
@@ -46,6 +49,7 @@ const PhotoMealPage = () => {
         protein: Number(analysis.protein) || 0,
         fats: Number(analysis.fats) || 0,
         carbs: Number(analysis.carbs) || 0,
+        imagePath,
         mealType: 'snack',
         servingUnit: 'g',
         servingSize: 100,
@@ -97,7 +101,7 @@ const PhotoMealPage = () => {
           </div>
 
           <div style={{ marginTop: 12 }}>
-            <button className="button button-secondary" onClick={() => { setAnalysis(null); setPreview(null); setFile(null); }}>Reset</button>
+            <button className="button button-secondary" onClick={() => { setAnalysis(null); setImagePath(''); setPreview(null); setFile(null); }}>Reset</button>
             <button className="button button-primary" onClick={handleSave} style={{ marginLeft: 8 }} disabled={loading}>
               {loading ? 'Saving...' : 'Save to today'}
             </button>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import NutritionSummary from '../components/NutritionSummary';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import { api, resolveApiAssetUrl } from '../services/api';
 
 const DashboardPage = () => {
   const { user } = useAuth();
@@ -11,6 +11,7 @@ const DashboardPage = () => {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [photoAnalysis, setPhotoAnalysis] = useState(null);
+  const [photoImagePath, setPhotoImagePath] = useState('');
   const [photoLoading, setPhotoLoading] = useState(false);
   const [photoError, setPhotoError] = useState('');
 
@@ -33,6 +34,7 @@ const DashboardPage = () => {
     setPhotoFile(f);
     setPhotoPreview(URL.createObjectURL(f));
     setPhotoAnalysis(null);
+    setPhotoImagePath('');
     setPhotoError('');
   };
 
@@ -43,6 +45,7 @@ const DashboardPage = () => {
     try {
       const res = await api.analyzeMealPhoto(photoFile);
       setPhotoAnalysis(res.analysis);
+      setPhotoImagePath(res.file?.imagePath || '');
     } catch (err) {
       setPhotoError(err.message || 'Analysis failed');
     } finally {
@@ -62,6 +65,7 @@ const DashboardPage = () => {
         protein: Number(photoAnalysis.protein) || 0,
         fats: Number(photoAnalysis.fats) || 0,
         carbs: Number(photoAnalysis.carbs) || 0,
+        imagePath: photoImagePath,
         mealType: 'snack',
         servingUnit: 'g',
         servingSize: 100,
@@ -73,6 +77,7 @@ const DashboardPage = () => {
       setPhotoFile(null);
       setPhotoPreview(null);
       setPhotoAnalysis(null);
+      setPhotoImagePath('');
     } catch (err) {
       setPhotoError(err.message || 'Save failed');
     } finally {
@@ -135,6 +140,7 @@ const DashboardPage = () => {
             </div>
           </div>
         ) : null}
+        {photoAnalysis?.foodName ? <p style={{ marginTop: 12 }}><strong>Detected food:</strong> {photoAnalysis.foodName}</p> : null}
       </section>
 
       <section className="panel split-panel">
@@ -158,6 +164,13 @@ const DashboardPage = () => {
           ) : (
             today.meals.map((meal) => (
               <article className="meal-item" key={meal._id}>
+                {meal.imagePath ? (
+                  <img
+                    src={resolveApiAssetUrl(meal.imagePath)}
+                    alt={meal.foodName}
+                    style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 12, flexShrink: 0 }}
+                  />
+                ) : null}
                 <div>
                   <strong>{meal.foodName}</strong>
                   <p>{meal.mealType} · {meal.quantity}{meal.servingUnit} · {new Date(meal.date).toLocaleTimeString()}</p>

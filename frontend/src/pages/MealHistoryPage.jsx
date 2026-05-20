@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../services/api';
+import { api, resolveApiAssetUrl } from '../services/api';
 
 const MealHistoryPage = () => {
   const [meals, setMeals] = useState([]);
@@ -40,6 +40,13 @@ const MealHistoryPage = () => {
           <div className="meal-list">
             {meals.map((meal) => (
               <article className="meal-item" key={meal._id}>
+                {meal.imagePath ? (
+                  <img
+                    src={resolveApiAssetUrl(meal.imagePath)}
+                    alt={meal.foodName}
+                    style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 12, flexShrink: 0 }}
+                  />
+                ) : null}
                 <div>
                   <strong>{meal.foodName}</strong>
                   <p>{meal.mealType} · {meal.quantity}{meal.servingUnit} · {new Date(meal.date).toLocaleString()}</p>

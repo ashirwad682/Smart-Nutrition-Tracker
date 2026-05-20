@@ -1,5 +1,6 @@
 import Meal from '../models/Meal.js';
 import { analyzeFoodImage } from '../services/visionService.js';
+import path from 'path';
 
 const dayRange = () => {
   const start = new Date();
@@ -39,6 +40,7 @@ export const createMeal = async (req, res) => {
       protein,
       fats,
       carbs,
+      imagePath = '',
       mealType = 'snack',
       servingUnit = 'g',
       servingSize = 100,
@@ -59,6 +61,7 @@ export const createMeal = async (req, res) => {
       protein,
       fats,
       carbs,
+      imagePath,
       mealType,
       servingUnit,
       servingSize,
@@ -124,9 +127,10 @@ export const analyzeMealImage = async (req, res) => {
 
     // analyze the uploaded image (returns calories/protein/fats/carbs)
     const analysis = await analyzeFoodImage(file.path);
+    const imagePath = `/uploads/${path.basename(file.path)}`;
 
     // don't save automatically — return analysis for confirmation
-    return res.json({ analysis, file: { path: file.path, originalname: file.originalname } });
+    return res.json({ analysis, file: { path: file.path, originalname: file.originalname, imagePath } });
   } catch (error) {
     console.error('Image analysis failed', error);
     return res.status(500).json({ message: 'Image analysis failed' });

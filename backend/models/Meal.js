@@ -12,6 +12,7 @@ const mealSchema = new mongoose.Schema(
     protein: { type: Number, required: true },
     fats: { type: Number, required: true },
     carbs: { type: Number, required: true },
+    imagePath: { type: String, default: '' },
     mealType: { type: String, default: 'snack' },
     source: { type: String, default: 'manual' },
     date: { type: Date, default: Date.now }

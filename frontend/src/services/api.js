@@ -1,5 +1,11 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
+export const resolveApiAssetUrl = (assetPath) => {
+  if (!assetPath) return '';
+  if (assetPath.startsWith('http://') || assetPath.startsWith('https://')) return assetPath;
+  return `${API_URL}${assetPath}`;
+};
+
 const readToken = () => localStorage.getItem('bite-token');
 
 const request = async (path, options = {}) => {
