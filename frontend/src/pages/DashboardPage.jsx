@@ -8,12 +8,7 @@ const DashboardPage = () => {
   const { user } = useAuth();
   const [today, setToday] = useState({ meals: [], totals: { calories: 0, protein: 0, fats: 0, carbs: 0 } });
   const [loading, setLoading] = useState(true);
-  const [photoFile, setPhotoFile] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState(null);
-  const [photoAnalysis, setPhotoAnalysis] = useState(null);
-  const [photoImagePath, setPhotoImagePath] = useState('');
-  const [photoLoading, setPhotoLoading] = useState(false);
-  const [photoError, setPhotoError] = useState('');
+  
 
   useEffect(() => {
     const loadToday = async () => {
@@ -28,62 +23,7 @@ const DashboardPage = () => {
     loadToday();
   }, []);
 
-  const handlePhotoChange = (e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setPhotoFile(f);
-    setPhotoPreview(URL.createObjectURL(f));
-    setPhotoAnalysis(null);
-    setPhotoImagePath('');
-    setPhotoError('');
-  };
-
-  const analyzePhoto = async () => {
-    if (!photoFile) return setPhotoError('Choose a photo first');
-    setPhotoLoading(true);
-    setPhotoError('');
-    try {
-      const res = await api.analyzeMealPhoto(photoFile);
-      setPhotoAnalysis(res.analysis);
-      setPhotoImagePath(res.file?.imagePath || '');
-    } catch (err) {
-      setPhotoError(err.message || 'Analysis failed');
-    } finally {
-      setPhotoLoading(false);
-    }
-  };
-
-  const saveAnalysis = async () => {
-    if (!photoAnalysis) return setPhotoError('No analysis to save');
-    setPhotoLoading(true);
-    try {
-      await api.createMeal({
-        foodName: photoAnalysis.foodName || 'Image meal',
-        barcode: '',
-        quantity: 1,
-        calories: Number(photoAnalysis.calories) || 0,
-        protein: Number(photoAnalysis.protein) || 0,
-        fats: Number(photoAnalysis.fats) || 0,
-        carbs: Number(photoAnalysis.carbs) || 0,
-        imagePath: photoImagePath,
-        mealType: 'snack',
-        servingUnit: 'g',
-        servingSize: 100,
-        source: 'image'
-      });
-      // refresh today's meals
-      const refreshed = await api.getTodayMeals();
-      setToday(refreshed);
-      setPhotoFile(null);
-      setPhotoPreview(null);
-      setPhotoAnalysis(null);
-      setPhotoImagePath('');
-    } catch (err) {
-      setPhotoError(err.message || 'Save failed');
-    } finally {
-      setPhotoLoading(false);
-    }
-  };
+  
 
   return (
     <div className="page-stack">
@@ -104,44 +44,7 @@ const DashboardPage = () => {
 
       <NutritionSummary totals={today.totals} />
 
-      <section className="panel">
-        <h2>Analyze meal photo</h2>
-        <p>Upload a photo and the AI will estimate calories and macros for today.</p>
-        <input type="file" accept="image/*" onChange={handlePhotoChange} />
-        {photoPreview ? <img src={photoPreview} alt="preview" style={{ maxWidth: 240, marginTop: 8, borderRadius: 8 }} /> : null}
-        <div style={{ marginTop: 8 }}>
-          <button className="button button-primary" onClick={analyzePhoto} disabled={photoLoading || !photoFile}>
-            {photoLoading ? 'Analyzing...' : 'Analyze photo'}
-          </button>
-          {photoAnalysis ? (
-            <button className="button button-secondary" onClick={saveAnalysis} style={{ marginLeft: 8 }} disabled={photoLoading}>
-              Save to today
-            </button>
-          ) : null}
-        </div>
-        {photoError ? <div className="error-box">{photoError}</div> : null}
-        {photoAnalysis ? (
-          <div style={{ marginTop: 12 }} className="summary-grid">
-            <div className="summary-card">
-              <strong>Calories</strong>
-              <div>{photoAnalysis.calories} kcal</div>
-            </div>
-            <div className="summary-card">
-              <strong>Protein</strong>
-              <div>{photoAnalysis.protein} g</div>
-            </div>
-            <div className="summary-card">
-              <strong>Fat</strong>
-              <div>{photoAnalysis.fats} g</div>
-            </div>
-            <div className="summary-card">
-              <strong>Carbs</strong>
-              <div>{photoAnalysis.carbs} g</div>
-            </div>
-          </div>
-        ) : null}
-        {photoAnalysis?.foodName ? <p style={{ marginTop: 12 }}><strong>Detected food:</strong> {photoAnalysis.foodName}</p> : null}
-      </section>
+      
 
       <section className="panel split-panel">
         <div>
