@@ -22,6 +22,7 @@ const normalizeUsdaFood = (food) => ({
   protein: Math.round(nutrientValueFromList(food.foodNutrients, [1003, 203])),
   fats: Math.round(nutrientValueFromList(food.foodNutrients, [1004, 204])),
   carbs: Math.round(nutrientValueFromList(food.foodNutrients, [1005, 205])),
+  image: (food.photo && (food.photo.thumb || food.photo.small || food.photo)) || '',
   source: 'usda',
   raw: food
 });
@@ -36,6 +37,8 @@ const normalizeOffProduct = (product, barcode) => ({
   protein: Math.round(Number(product.nutriments?.proteins_100g || 0)),
   fats: Math.round(Number(product.nutriments?.fat_100g || 0)),
   carbs: Math.round(Number(product.nutriments?.carbohydrates_100g || 0)),
+  // prefer small/thumbnail images when available
+  image: product.image_small_url || product.image_thumb_url || product.image_url || '',
   source: 'openfoodfacts',
   raw: product
 });

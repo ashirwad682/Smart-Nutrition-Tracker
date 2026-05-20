@@ -44,7 +44,8 @@ const MealHistoryPage = () => {
                   <img
                     src={resolveApiAssetUrl(meal.imagePath)}
                     alt={meal.foodName}
-                    style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 12, flexShrink: 0 }}
+                    style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 12, flexShrink: 0, cursor: 'pointer' }}
+                    onClick={() => window.open(resolveApiAssetUrl(meal.imagePath), '_blank')}
                   />
                 ) : null}
                 <div>

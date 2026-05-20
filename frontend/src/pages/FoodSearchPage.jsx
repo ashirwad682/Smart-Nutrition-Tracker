@@ -55,6 +55,9 @@ const FoodSearchPage = () => {
           ) : (
             results.map((food, index) => (
               <article className="food-card" key={`${food.foodName}-${index}`}>
+                {food.image ? (
+                  <img src={food.image} alt={food.foodName} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, marginRight: 12 }} />
+                ) : null}
                 <div>
                   <h3>{food.foodName}</h3>
                   <p>{food.servingSize} {food.servingUnit} serving</p>

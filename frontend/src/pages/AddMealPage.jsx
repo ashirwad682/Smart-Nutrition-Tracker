@@ -42,6 +42,7 @@ const AddMealPage = () => {
         protein: Math.round(scaled.protein),
         fats: Math.round(scaled.fats),
         carbs: Math.round(scaled.carbs),
+        imagePath: food.image || '',
         mealType,
         source: food.source || 'manual'
       });
