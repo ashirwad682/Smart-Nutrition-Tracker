@@ -6,6 +6,7 @@ import { connectDB } from './config/db.js';
 import authRoutes from './routes/auth.js';
 import foodRoutes from './routes/food.js';
 import mealRoutes from './routes/meals.js';
+import chatRoutes from './routes/chat.js';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/food', foodRoutes);
 app.use('/api/meals', mealRoutes);
+app.use('/api/chat', chatRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ message: 'Route not found' });

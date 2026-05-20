@@ -65,3 +65,8 @@ export const api = {
   getMealHistory: () => request('/api/meals/history'),
   deleteMeal: (id) => request(`/api/meals/${id}`, { method: 'DELETE' })
 };
+
+// Chat endpoints
+api.requestChatDaily = (goals) => request('/api/chat/daily', { method: 'POST', body: JSON.stringify({ goals }) });
+
+export { api };
