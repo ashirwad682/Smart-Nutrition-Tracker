@@ -56,3 +56,5 @@ cd frontend && npm run dev
 - `GET /api/meals/today`
 - `GET /api/meals/history`
 - `DELETE /api/meals/:id`
+
+Smart Nutrition Tracker is a MERN stack health application that helps users automatically track their daily food intake. Users can scan a barcode or search for a meal manually. The app fetches nutrition data from external food databases and logs calories, protein, fats, and carbohydrates. MongoDB stores user profiles and meal history, while React provides an interactive dashboard for daily nutrition tracking.
