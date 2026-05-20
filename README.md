@@ -1,2 +1,1 @@
-# BITE.
-bite.  Action: User scans a barcode or types a meal.  Process: App sends a request to the nutrition database.  Result: App automatically logs exact calories, protein, and fats.
+Smart Nutrition Tracker is a MERN stack health application that helps users automatically track their daily food intake. Users can scan a barcode or search for a meal manually. The app fetches nutrition data from an external food database and logs calories, protein, fats, and carbohydrates. MongoDB stores user profiles and meal history, while React provides an interactive dashboard for daily nutrition tracking.
